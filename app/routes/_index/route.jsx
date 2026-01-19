@@ -20,7 +20,7 @@ export const loader = async ({ request }) => {
       headers: request.headers,
     });
     
-    const { loader: chatLoader } = await import("../routes/chat.jsx");
+    const { loader: chatLoader } = await import("../chat.jsx");
     return chatLoader({ request: chatRequest });
   }
 
@@ -55,7 +55,7 @@ export const action = async ({ request }) => {
     });
     
     // Import and call the chat route handler
-    const { action: chatAction } = await import("../routes/chat.jsx");
+    const { action: chatAction } = await import("../chat.jsx");
     return chatAction({ request: chatRequest });
   }
 
