@@ -17,6 +17,7 @@ export function createStreamManager(encoder, controller) {
   const sendMessage = (data) => {
     try {
       const text = `data: ${JSON.stringify(data)}\n\n`;
+      console.log("StreamManager sending:", data.type, data.chunk ? `chunk: ${data.chunk.substring(0, 50)}...` : '');
       controller.enqueue(encoder.encode(text));
     } catch (error) {
       console.error('Error sending stream message:', error);

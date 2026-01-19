@@ -157,6 +157,7 @@ async function handleChatSession({
 
   try {
     // Send conversation ID to client
+    console.log("Sending conversation ID to client:", conversationId);
     stream.sendMessage({ type: 'id', conversation_id: conversationId });
 
     // Connect to MCP servers and get available tools
@@ -209,6 +210,7 @@ async function handleChatSession({
         {
           // Handle text chunks
           onText: (textDelta) => {
+            console.log("Sending text chunk:", textDelta);
             stream.sendMessage({
               type: 'chunk',
               chunk: textDelta
