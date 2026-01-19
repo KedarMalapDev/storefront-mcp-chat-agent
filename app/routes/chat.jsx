@@ -22,6 +22,25 @@ export async function loader({ request }) {
     });
   }
 
+  // For POST requests, let the action handle them (loader shouldn't process POST with body)
+  if (request.method === "POST") {
+    // Only handle POST in loader if it's an SSE request (which shouldn't have a body)
+    const acceptHeader = request.headers.get("Accept");
+    if (acceptHeader === "text/event-stream") {
+      // This is an SSE request, but POST with body should go to action
+      // Return unsupported for now
+      return new Response(JSON.stringify({ error: "POST requests should use action, not loader" }), {
+        status: 405,
+        headers: getCorsHeaders(request)
+      });
+    }
+    // For other POST requests, reject in loader
+    return new Response(JSON.stringify({ error: "POST requests should use action, not loader" }), {
+      status: 405,
+      headers: getCorsHeaders(request)
+    });
+  }
+
   const url = new URL(request.url);
 
   // Handle history fetch requests - matches /chat?history=true&conversation_id=XYZ
@@ -29,12 +48,7 @@ export async function loader({ request }) {
     return handleHistoryRequest(request, url.searchParams.get('conversation_id'));
   }
 
-  // Handle SSE requests
-  if (!url.searchParams.has('history') && request.headers.get("Accept") === "text/event-stream") {
-    return handleChatRequest(request);
-  }
-
-  // API-only: reject all other requests
+  // API-only: reject all other GET requests
   return new Response(JSON.stringify({ error: AppConfig.errorMessages.apiUnsupported }), { status: 400, headers: getCorsHeaders(request) });
 }
 
@@ -69,7 +83,7 @@ async function handleChatRequest(request) {
     const contentType = request.headers.get("content-type");
     const contentLength = request.headers.get("content-length");
     console.log("handleChatRequest - contentType:", contentType, "contentLength:", contentLength);
-    
+
     const body = await request.json();
     console.log("handleChatRequest - body parsed:", body);
     const userMessage = body.message;
