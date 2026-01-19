@@ -1,0 +1,93 @@
+name: Deploy Shopify App (Development)
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Deployment message'
+        required: false
+        default: 'Automated deployment via GitHub Actions'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: shopify-deploy-development-${{ github.ref }}
+      cancel-in-progress: true
+    
+    if: >-
+      ${{ 
+        github.event_name == 'workflow_dispatch' || 
+        !contains(github.event.head_commit.message, '[no-shopify-deploy]') 
+      }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Prepare deployment message
+        id: set-message
+        env:
+          MANUAL_MSG: ${{ github.event.inputs.message }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            FINAL_MSG="$MANUAL_MSG"
+          else
+            # Sanitize commit message: replace newlines/tabs with spaces
+            FINAL_MSG=$(echo "$COMMIT_MSG" | tr '\n\t\r' ' ' | sed 's/  */ /g')
+            
+            # Truncate to 197 chars + "..." if needed
+            if [ ${#FINAL_MSG} -gt 200 ]; then
+              FINAL_MSG="${FINAL_MSG:0:197}..."
+            fi
+            
+            # Fallback if empty
+            if [ -z "$FINAL_MSG" ]; then
+              FINAL_MSG="Automated deployment from ${{ github.ref_name }}"
+            fi
+          fi
+          
+          echo "DEPLOY_MESSAGE=$FINAL_MSG" >> $GITHUB_ENV
+          echo "Deployment Message: $FINAL_MSG"
+
+      - name: Install Shopify CLI
+        run: npm install -g @shopify/cli@latest @shopify/theme@latest
+
+      - name: Deploy to Shopify (Development)
+        run: |
+          shopify app deploy \
+            --force \
+            --message "$DEPLOY_MESSAGE" \
+            --source-control-url "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+        env:
+          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_CLI_PARTNERS_TOKEN }}
+          SHOPIFY_API_KEY: ${{ secrets.SHOPIFY_API_KEY_DEVELOPMENT }}
+
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "✅ Successfully deployed to Shopify Development"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
