@@ -17,12 +17,16 @@ export const action = async ({ request }) => {
       }
     });
 
+    // Clone the request body to avoid consuming it
+    // Read the body as an array buffer to preserve it
+    const body = request.body ? await request.arrayBuffer() : null;
+
     // Forward the request to the chat route
     // Note: duplex option is required when sending a body in Node.js
     const chatRequest = new Request(chatUrl.toString(), {
       method: request.method,
       headers: request.headers,
-      body: request.body,
+      body: body,
       duplex: 'half',
     });
 
