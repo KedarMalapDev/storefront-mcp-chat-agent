@@ -16,22 +16,22 @@ export default async function handleRequest(
   // Log response headers to debug
   console.log("entry.server - responseHeaders Content-Type:", responseHeaders.get("Content-Type"));
   console.log("entry.server - responseStatusCode:", responseStatusCode);
-  
+
   // Check if React Router has already set a response with Content-Type: text/event-stream
   // This happens when an action returns a Response object with SSE headers
   const contentType = responseHeaders.get("Content-Type");
   const isSseResponse = contentType && contentType.includes("text/event-stream");
-  
+
   // Check if this is an API request based on Accept header or path
   const acceptHeader = request.headers.get("Accept");
   const url = new URL(request.url);
   const pathPrefix = url.searchParams.get("path_prefix");
-  const isApiRequest = acceptHeader === "text/event-stream" || 
-                       pathPrefix === "/apps/chat" ||
-                       url.pathname === "/chat";
-  
+  const isApiRequest = acceptHeader === "text/event-stream" ||
+    pathPrefix === "/apps/chat" ||
+    url.pathname === "/chat";
+
   console.log("entry.server - isApiRequest:", isApiRequest, "isSseResponse:", isSseResponse, "method:", request.method);
-  
+
   // For API requests with SSE, we should not add document headers
   // and should preserve the response headers from the action
   if (isApiRequest && request.method === "POST") {
@@ -51,13 +51,13 @@ export default async function handleRequest(
             // If it's text/event-stream, we should preserve it and not override
             const existingContentType = responseHeaders.get("Content-Type");
             console.log("entry.server callback - existingContentType:", existingContentType);
-            
+
             // Only set HTML content-type if it's not already set (for API responses)
             // React Router should have already set the correct headers from the action's Response
             if (!existingContentType) {
               responseHeaders.set("Content-Type", "text/html");
             }
-            
+
             resolve(
               new Response(stream, {
                 headers: responseHeaders,
