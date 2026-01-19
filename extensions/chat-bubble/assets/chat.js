@@ -496,6 +496,18 @@
             body: requestBody
           });
 
+          console.log('Response status:', response.status);
+          console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+          console.log('Response content-type:', response.headers.get('content-type'));
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          if (!response.body) {
+            throw new Error('Response body is null');
+          }
+
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           let buffer = '';
@@ -508,12 +520,19 @@
           messagesContainer.appendChild(messageElement);
           currentMessageElement = messageElement;
 
+          console.log('Starting to read stream...');
+
           // Process the stream
           while (true) {
             const { value, done } = await reader.read();
-            if (done) break;
+            if (done) {
+              console.log('Stream done');
+              break;
+            }
 
-            buffer += decoder.decode(value, { stream: true });
+            const decoded = decoder.decode(value, { stream: true });
+            console.log('Received chunk:', decoded.substring(0, 100));
+            buffer += decoded;
             const lines = buffer.split('\n\n');
             buffer = lines.pop() || '';
 
@@ -521,11 +540,14 @@
               if (line.startsWith('data: ')) {
                 try {
                   const data = JSON.parse(line.slice(6));
+                  console.log('Parsed event:', data.type);
                   this.handleStreamEvent(data, currentMessageElement, messagesContainer, userMessage,
                     (newElement) => { currentMessageElement = newElement; });
                 } catch (e) {
                   console.error('Error parsing event data:', e, line);
                 }
+              } else if (line.trim()) {
+                console.log('Non-data line:', line);
               }
             }
           }
