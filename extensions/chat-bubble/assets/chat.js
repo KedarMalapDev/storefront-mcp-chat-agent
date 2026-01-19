@@ -783,11 +783,14 @@
           attemptCount++;
 
           try {
-            // const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
-              // encodeURIComponent(conversationId);
-            const shopDomain = window.location.hostname;
-            const tokenUrl = `https://${shopDomain}/apps/auth/token-status?conversation_id=${encodeURIComponent(conversationId)}`;
-            const response = await fetch(tokenUrl);
+            // Use direct Render URL for token status since app proxy is only configured for /apps/chat
+            // The app proxy only forwards requests matching the configured subpath
+            const renderUrl = 'https://storefront-mcp-chat-agent.onrender.com';
+            const tokenUrl = `${renderUrl}/auth/token-status?conversation_id=${encodeURIComponent(conversationId)}`;
+            const response = await fetch(tokenUrl, {
+              mode: 'cors',
+              credentials: 'include'
+            });
 
             if (!response.ok) {
               throw new Error('Token status check failed: ' + response.status);
