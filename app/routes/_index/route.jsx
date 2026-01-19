@@ -47,8 +47,11 @@ export const action = async ({ request }) => {
       }
     });
     
-    // Read the request body as text to preserve it
-    // Check if request has a body by checking content-length or content-type
+    // Clone the request to preserve the body stream
+    // This allows us to read the body without consuming the original
+    const clonedRequest = request.clone();
+    
+    // Read the request body as text from the cloned request
     let bodyText = null;
     const contentType = request.headers.get("content-type");
     const contentLength = request.headers.get("content-length");
@@ -56,7 +59,7 @@ export const action = async ({ request }) => {
     // Try to read body if content-length exists and > 0, or if content-type suggests a body
     if ((contentLength && parseInt(contentLength) > 0) || (contentType && contentType.includes("application/json"))) {
       try {
-        bodyText = await request.text();
+        bodyText = await clonedRequest.text();
         // If body is empty string, set to null
         if (bodyText === "") {
           bodyText = null;
