@@ -18,6 +18,7 @@ scopes = "unauthenticated_read_product_listings,read_products"
 
 [auth]
 redirect_urls = [
+  "https://storefront-mcp-chat-agent.onrender.com/auth",
   "https://storefront-mcp-chat-agent.onrender.com/auth/callback",
   "https://storefront-mcp-chat-agent.onrender.com/auth/shopify/callback"
 ]
