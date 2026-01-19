@@ -21,3 +21,8 @@ redirect_urls = [
   "https://storefront-mcp-chat-agent.onrender.com/auth/callback",
   "https://storefront-mcp-chat-agent.onrender.com/auth/shopify/callback"
 ]
+
+[app_proxy]
+url = "https://storefront-mcp-chat-agent.onrender.com"
+prefix = "apps"
+subpath = "chat"

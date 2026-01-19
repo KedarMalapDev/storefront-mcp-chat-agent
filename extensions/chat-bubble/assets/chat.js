@@ -481,7 +481,9 @@
             prompt_type: promptType
           });
 
-          const streamUrl = 'https://localhost:3458/chat';
+          // const streamUrl = 'https://localhost:3458/chat';
+          const shopDomain = window.location.hostname;
+          const streamUrl = `https://${shopDomain}/apps/chat`;
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -630,7 +632,9 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-          const historyUrl = `https://localhost:3458/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
+          // const historyUrl = `https://localhost:3458/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
+          const shopDomain = window.location.hostname;
+          const historyUrl = `https://${shopDomain}/apps/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
           console.log('Fetching history from:', historyUrl);
 
           const response = await fetch(historyUrl, {
@@ -779,8 +783,10 @@
           attemptCount++;
 
           try {
-            const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
-              encodeURIComponent(conversationId);
+            // const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
+              // encodeURIComponent(conversationId);
+            const shopDomain = window.location.hostname;
+            const tokenUrl = `https://${shopDomain}/apps/auth/token-status?conversation_id=${encodeURIComponent(conversationId)}`;
             const response = await fetch(tokenUrl);
 
             if (!response.ok) {
