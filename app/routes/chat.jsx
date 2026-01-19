@@ -65,7 +65,13 @@ async function handleHistoryRequest(request, conversationId) {
 async function handleChatRequest(request) {
   try {
     // Get message data from request body
+    // Log request details for debugging
+    const contentType = request.headers.get("content-type");
+    const contentLength = request.headers.get("content-length");
+    console.log("handleChatRequest - contentType:", contentType, "contentLength:", contentLength);
+    
     const body = await request.json();
+    console.log("handleChatRequest - body parsed:", body);
     const userMessage = body.message;
 
     // Validate required message

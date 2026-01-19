@@ -47,11 +47,8 @@ export const action = async ({ request }) => {
       }
     });
     
-    // Clone the request to preserve the body stream
-    // This allows us to read the body without consuming the original
-    const clonedRequest = request.clone();
-    
-    // Read the request body as text from the cloned request
+    // Read the request body as text
+    // Note: We need to read it here because we're forwarding to a different route
     let bodyText = null;
     const contentType = request.headers.get("content-type");
     const contentLength = request.headers.get("content-length");
@@ -59,15 +56,19 @@ export const action = async ({ request }) => {
     // Try to read body if content-length exists and > 0, or if content-type suggests a body
     if ((contentLength && parseInt(contentLength) > 0) || (contentType && contentType.includes("application/json"))) {
       try {
-        bodyText = await clonedRequest.text();
+        // Read body directly from the request
+        bodyText = await request.text();
+        console.log("Body read in index route, length:", bodyText?.length || 0);
         // If body is empty string, set to null
         if (bodyText === "") {
           bodyText = null;
         }
       } catch (error) {
-        console.error("Error reading request body:", error);
+        console.error("Error reading request body in index route:", error);
         bodyText = null;
       }
+    } else {
+      console.log("No body detected - contentLength:", contentLength, "contentType:", contentType);
     }
     
     // Forward the request to the chat route
